@@ -1,77 +1,100 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { register } from '../actions/userActions';
+import LoadingBox from '../components/LoadingBox';
+import MessageBox from '../components/MessageBox';
 
-function RegisterScreen(props) {
-
+export default function RegisterScreen(props) {
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rePassword, setRePassword] = useState('');
-  const userRegister = useSelector(state => state.userRegister);
-  const { loading, userInfo, error } = userRegister;
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const { search } = useLocation();
+  const redirectInUrl = new URLSearchParams(search).get('redirect');
+  const redirect = redirectInUrl ? redirectInUrl : '/';
+
+  const userRegister = useSelector((state) => state.userRegister);
+  const { userInfo, loading, error } = userRegister;
+
   const dispatch = useDispatch();
-
-  const redirect = props.location.search ? props.location.search.split("=")[1] : '/';
-  useEffect(() => {
-    if (userInfo) {
-      props.history.push(redirect);
-    }
-    return () => {
-      //
-    };
-  }, [userInfo]);
-
   const submitHandler = (e) => {
     e.preventDefault();
-    dispatch(register(name, email, password));
-  }
-  return <div className="form">
-    <form onSubmit={submitHandler} >
-      <ul className="form-container">
-        <li>
-          <h2>Create Account</h2>
-        </li>
-        <li>
-          {loading && <div>Loading...</div>}
-          {error && <div>{error}</div>}
-        </li>
-        <li>
-          <label htmlFor="name">
-            Name
-          </label>
-          <input type="name" name="name" id="name" onChange={(e) => setName(e.target.value)}>
-          </input>
-        </li>
-        <li>
-          <label htmlFor="email">
-            Email
-          </label>
-          <input type="email" name="email" id="email" onChange={(e) => setEmail(e.target.value)}>
-          </input>
-        </li>
-        <li>
+    if (password !== confirmPassword) {
+      alert('Password and confirm password are not match');
+    } else {
+      dispatch(register(name, email, password));
+    }
+  };
+  useEffect(() => {
+    if (userInfo) {
+      navigate(redirect);
+    }
+  }, [navigate, redirect, userInfo]);
+  return (
+    <div>
+      <form className="form" onSubmit={submitHandler}>
+        <div>
+          <h1>Create Account</h1>
+        </div>
+        {loading && <LoadingBox></LoadingBox>}
+        {error && <MessageBox variant="danger">{error}</MessageBox>}
+        <div>
+          <label htmlFor="name">Name</label>
+          <input
+            type="text"
+            id="name"
+            placeholder="Enter name"
+            required
+            onChange={(e) => setName(e.target.value)}
+          ></input>
+        </div>
+        <div>
+          <label htmlFor="email">Email address</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="Enter email"
+            required
+            onChange={(e) => setEmail(e.target.value)}
+          ></input>
+        </div>
+        <div>
           <label htmlFor="password">Password</label>
-          <input type="password" id="password" name="password" onChange={(e) => setPassword(e.target.value)}>
-          </input>
-        </li>
-        <li>
-          <label htmlFor="rePassword">Re-Enter Password</label>
-          <input type="password" id="rePassword" name="rePassword" onChange={(e) => setRePassword(e.target.value)}>
-          </input>
-        </li>
-        <li>
-          <button type="submit" className="button primary">Register</button>
-        </li>
-        <li>
-          Already have an account?
-          <Link to={redirect === "/" ? "signin" : "signin?redirect=" + redirect} className="button secondary text-center" >Create your amazona account</Link>
-
-        </li>
-
-      </ul>
-    </form>
-  </div>
+          <input
+            type="password"
+            id="password"
+            placeholder="Enter password"
+            required
+            onChange={(e) => setPassword(e.target.value)}
+          ></input>
+        </div>
+        <div>
+          <label htmlFor="confirmPassword">Confirm Password</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            placeholder="Enter confirm password"
+            required
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          ></input>
+        </div>
+        <div>
+          <label />
+          <button className="primary" type="submit">
+            Register
+          </button>
+        </div>
+        <div>
+          <label />
+          <div>
+            Already have an account?{' '}
+            <Link to={`/signin?redirect=${redirect}`}>Sign-In</Link>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
 }
-export default RegisterScreen;
